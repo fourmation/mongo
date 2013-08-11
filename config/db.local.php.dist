@@ -1,0 +1,22 @@
+<?php
+
+return array(
+    'mongo' => array(
+        'database' => '',
+        'hostname'  => '',
+        'port' => '',
+
+        /* The following is only required if the above key is set to TRUE */
+        'auth' => array(
+            'requireAuthentication' => false,
+            'username'  => '',
+            'password'  => '',
+        ),
+        
+        /* These configuration keys can be used to integrate https://github.com/aaron4m/zf2-mongouser */
+        'user' => array(
+            'database' => '',       //Name of your MongoDB Database
+            'collection' => '',     //Name of your MongoDB Collection
+        ),
+    ),
+);
