@@ -7,6 +7,7 @@ use MongoCursor;
 use MongoCollection;
 use Exception;
 
+use Mongo\Hydrator\Strategy\MongoIdStrategy;
 use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\ResultSet\HydratingResultSet;
 use Zend\Stdlib\Hydrator\ClassMethods;
@@ -16,6 +17,8 @@ use ZfcBase\EventManager\EventProvider;
 
 /**
  * Class DbAbstract
+ *
+ * Entities can use _id as the unique Identifier
  *
  * @package Zf2Mongo\Mapper
  */
@@ -71,10 +74,9 @@ abstract class DbAbstract extends EventProvider
             return true;
         }
 
-        if (!$this->hydrator instanceof ClassMethods) {
+        if (! $this->hydrator instanceof ClassMethods) {
             $this->getHydrator();
         }
-
         
         if (!is_object($this->entityPrototype)) {
             throw new \Exception('No entity prototype set');
@@ -88,6 +90,7 @@ abstract class DbAbstract extends EventProvider
      * @see http://www.php.net/manual/en/class.mongocollection.php
      *
      * @param array $query
+     * @param array $fields
      * @param null $entityPrototype
      * @param null $hydrator
      * @param bool $findAll
@@ -127,6 +130,7 @@ abstract class DbAbstract extends EventProvider
      * @see http://www.php.net/manual/en/class.mongocollection.php
      *
      * @param array $query
+     * @param array $fields
      * @param null $entityPrototype
      * @param null $hydrator
      * @param bool $findAll
@@ -142,6 +146,7 @@ abstract class DbAbstract extends EventProvider
      * @see http://www.php.net/manual/en/class.mongocollection.php
      *
      * @param array $query
+     * @param array $fields
      * @param null $entityPrototype
      * @param HydratorInterface $hydrator
      * @return bool|HydratingResultSet
@@ -158,6 +163,7 @@ abstract class DbAbstract extends EventProvider
      * @see http://www.php.net/manual/en/class.mongocollection.php
      *
      * @param array $query
+     * @param array $fields
      * @param null $entityPrototype
      * @param HydratorInterface $hydrator
      * @return bool|HydratingResultSet
@@ -179,7 +185,8 @@ abstract class DbAbstract extends EventProvider
         $collection = $this->getCollectionPrototype();
 
         $rowData = $this->getHydrator()->extract($entity);
-        if (is_null($rowData['_id'])) unset($rowData['_id']);
+        // use _id as the id in entities where you want the mongo id to be the id
+        if (is_null($rowData['id'])) unset($rowData['id']);
 
         $collection->insert($rowData, $options);
 
@@ -191,7 +198,8 @@ abstract class DbAbstract extends EventProvider
      * @see http://www.php.net/manual/en/mongocollection.update.php
      *
      * @param $entity
-     * @param null $where
+     * @param array|null $where
+     * @param array $options
      * @param null $collectionName
      * @param HydratorInterface $hydrator
      * @return bool
@@ -202,22 +210,23 @@ abstract class DbAbstract extends EventProvider
         $collectionName = $collectionName ?: $this->collection;
         $hydrator = (!$hydrator)?$this->getHydrator():$hydrator;
 
-        $this->getDbAdapter()->selectCollection($collectionName);
+        $this->getDbAdapter()->selectCollection($this->database, $collectionName);
         $collection = $this->getCollectionPrototype();
 
-        if (!$where) {
+        if (! $where) {
             $id = $entity->get_id();
             if ($id instanceof MongoId) {
                 $id = $this->mongoId($id);
             }
-            $where = array('_id'=>$id);
+            $where = array('_id' => $id);
         }
 
         $rowData = $hydrator->extract($entity);
 
-        $collection->update($where, $rowData, $options);
+        // use _id as the id in entities where you want the mongo id to be the id
+        if (is_null($rowData['id'])) unset($rowData['id']);
 
-        return $collection->update($rowData);
+        return $collection->update($where, $rowData, $options);
     }
 
     /**
@@ -232,12 +241,12 @@ abstract class DbAbstract extends EventProvider
     {
         $this->initialise();
 
-        if (!$where) {
+        if (! $where) {
             $id = $entity->get_id();
             if ($id instanceof MongoId) {
                 $id = $this->mongoId($id);
             }
-            $where = array('_id'=>$id);
+            $where = array('_id' => $id);
         }
 
         $collection = $this->getCollectionPrototype();
@@ -326,6 +335,7 @@ abstract class DbAbstract extends EventProvider
     /**
      * Set Entity Prototype
      * @param mixed $entityPrototype
+     * @return $this
      */
     public function setEntityPrototype($entityPrototype)
     {
@@ -352,6 +362,7 @@ abstract class DbAbstract extends EventProvider
     public function setHydrator(ClassMethods $hydrator)
     {
         $this->hydrator = $hydrator;
+        $this->hydrator->addStrategy('_id', new MongoIdStrategy());
         return $this;
     }
 
@@ -362,7 +373,9 @@ abstract class DbAbstract extends EventProvider
     public function getHydrator()
     {
         if (!$this->hydrator) {
-            $this->hydrator = new ClassMethods(false);
+            // use underscore separated keys by default
+            $this->hydrator = new ClassMethods();
+            $this->hydrator->addStrategy('_id', new MongoIdStrategy());
         }
         return $this->hydrator;
     }
@@ -370,6 +383,7 @@ abstract class DbAbstract extends EventProvider
     /**
      * Set last cursor object
      * @param \MongoCursor $lastCursor
+     * @return $this
      */
     public function setLastCursor($lastCursor)
     {
@@ -386,6 +400,5 @@ abstract class DbAbstract extends EventProvider
     {
         return $this->lastCursor;
     }
-
 
 }
