@@ -96,7 +96,8 @@ abstract class DbAbstract extends EventProvider
      * @param bool $findAll
      * @return bool|HydratingResultSet
      */
-    public function find($query = array(), $fields = array(), $entityPrototype = null, $hydrator = null, $findAll = true)
+    public function find($query = array(), $fields = array(), $entityPrototype = null, $hydrator = null, $findAll = true,
+         $order = array())
     {
         $this->initialise();
 
@@ -117,6 +118,10 @@ abstract class DbAbstract extends EventProvider
             $resultSet = $this->getHydrator()->hydrate($cursor,
                 $entityPrototype ?: $this->getEntityPrototype());
 
+        }
+
+        if ( ! empty($order)) {
+            $cursor->sort($order);
         }
 
         // Save the cursor to the object for raw output
