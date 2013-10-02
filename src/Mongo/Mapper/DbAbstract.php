@@ -143,7 +143,7 @@ abstract class DbAbstract extends EventProvider
      */
     public function select($query = array(), $fields = array(), $entityPrototype = null, $hydrator = null, $findAll = true)
     {
-        return find($query, $fields, $entityPrototype, $hydrator, $findAll);
+        return $this->find($query, $fields, $entityPrototype, $hydrator, $findAll);
     }
 
     /**
