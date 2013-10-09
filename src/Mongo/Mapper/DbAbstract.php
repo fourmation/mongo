@@ -7,7 +7,6 @@ use MongoCursor;
 use MongoCollection;
 use Exception;
 
-use Mongo\Hydrator\Strategy\MongoIdStrategy;
 use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\ResultSet\HydratingResultSet;
 
