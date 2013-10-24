@@ -114,7 +114,7 @@ abstract class DbAbstract extends EventProvider
 
             if (is_null($cursor)) return false;
             $resultSet = new HydratingResultSet($hydrator ?: $this->getHydrator(),
-                $entityPrototype ?: $this->getEntityPrototype());
+                $entityPrototype ?: clone $this->getEntityPrototype());
 
             $resultSet->initialize($cursor);
         } else {
@@ -122,7 +122,7 @@ abstract class DbAbstract extends EventProvider
 
             if (is_null($cursor)) return false;
             $resultSet = $this->getHydrator()->hydrate($cursor,
-                $entityPrototype ?: $this->getEntityPrototype());
+                $entityPrototype ?: clone $this->getEntityPrototype());
 
         }
 
