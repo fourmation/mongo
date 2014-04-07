@@ -7,7 +7,7 @@ the native php client.
 Added the following requirement to your projects composer.json file.
 
 ```php
-"fourmation/mongo": "dev-master"
+"fourmation/mongo": "0.1.0"
 ```
 
 and run
