@@ -13,7 +13,7 @@ class MongoIdStrategy extends DefaultStrategy
      */
     public function extract($value)
     {
-        if (is_string($value)) {
+        if (is_string($value) || is_null($value)) {
             return new \MongoId($value);
         }
 
